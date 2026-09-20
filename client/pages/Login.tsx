@@ -20,7 +20,11 @@ export default function Login() {
 
   return <main className="login-page">
     <section className="login-story">
-      <div className="brand-mark">stc</div>
+      <img
+        className="login-stc-logo"
+        src={`${import.meta.env.BASE_URL}stc-logo-white.png`}
+        alt="stc"
+      />
       <div className="story-copy">
         <span className="eyebrow">COW operations · Kingdom of Saudi Arabia</span>
         <h1>Energy intelligence for every site.</h1>
