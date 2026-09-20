@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 const supabaseUrl = String(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
 const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "");
-const sheetUrl = String(process.env.ENERGY_DASHBOARD_CSV_URL || "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0GkXnQMdKYZITuuMsAzeWDtGUqEJ3lWwqNdA67NewOsDOgqsZHKHECEEkea4nrukx4-DqxKmf62nC/pub?gid=1149576218&single=true&output=csv");
+const configuredSheetUrl = String(process.env.ENERGY_DASHBOARD_CSV_URL || "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0GkXnQMdKYZITuuMsAzeWDtGUqEJ3lWwqNdA67NewOsDOgqsZHKHECEEkea4nrukx4-DqxKmf62nC/pub?gid=1149576218&single=true&output=csv");
 const dryRun = process.argv.includes("--dry-run");
 if (!supabaseUrl && !dryRun) throw new Error("Missing SUPABASE_URL or VITE_SUPABASE_URL.");
 if (!serviceRoleKey && !dryRun) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY.");
@@ -22,6 +22,20 @@ function parseCsv(text) {
   if(value||row.length){row.push(value);rows.push(row);}
   const headers=rows.shift()?.map(v=>v.trim())||[];
   return rows.map(cells=>Object.fromEntries(headers.map((h,i)=>[h,cells[i]??""])));
+}
+
+function normalizeSheetUrl(input) {
+  const url = new URL(input);
+  const gid = url.searchParams.get("gid") || "1149576218";
+  const standard = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (standard && !url.pathname.includes("/d/e/")) {
+    return `https://docs.google.com/spreadsheets/d/${standard[1]}/export?format=csv&gid=${encodeURIComponent(gid)}`;
+  }
+  const published = url.pathname.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9-_]+)/);
+  if (published) {
+    return `https://docs.google.com/spreadsheets/d/e/${published[1]}/pub?output=csv&single=true&gid=${encodeURIComponent(gid)}`;
+  }
+  return input;
 }
 const clean=v=>{const s=String(v??"").trim();return !s||s==="#N/A"||s==="#VALUE!"||s==="Not Found"?null:s;};
 const num=v=>{const s=clean(v);if(s===null)return null;const n=Number(String(s).replace(/,/g,"").replace(/\s*(LTR|L)\s*$/i,""));return Number.isFinite(n)?n:null;};
@@ -50,12 +64,16 @@ function normalize(row, sourceRow) {
   };
 }
 
+const sheetUrl=normalizeSheetUrl(configuredSheetUrl);
 const response=await fetch(sheetUrl);
 if(!response.ok)throw new Error(`Google Sheet download failed: ${response.status}`);
 const csv=await response.text();
 const sourceRows=parseCsv(csv);
+const sourceHeaders=Object.keys(sourceRows[0]||{});
+if(!sourceHeaders.includes("Site"))throw new Error(`The downloaded file is not the Energy Dashboard CSV. Headers received: ${sourceHeaders.slice(0,8).join(", ")||"none"}`);
 const records=sourceRows.map((row,i)=>normalize(row,i+2)).filter(Boolean);
 const unique=new Map(); for(const record of records)unique.set(record.site,record);
+if(records.length===0)throw new Error("No Energy Dashboard site rows were found; migration stopped without changing Supabase.");
 if(unique.size!==records.length)throw new Error(`Duplicate Site IDs found: ${records.length-unique.size}`);
 console.log(`Validated ${records.length} rows and ${unique.size} unique sites.`);
 if(dryRun)process.exit(0);
