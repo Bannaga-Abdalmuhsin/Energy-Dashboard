@@ -36,6 +36,14 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 Never commit the Supabase service-role key. The browser application needs only the public anon key; RLS controls access.
 
+## Migrate the Energy Dashboard worksheet
+
+1. Run `supabase/energy_dashboard.sql` once in the Supabase SQL Editor.
+2. Add GitHub Actions secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `ENERGY_DASHBOARD_CSV_URL`.
+3. Open **Actions → Migrate Energy Dashboard to Supabase → Run workflow**.
+
+The importer validates unique Site IDs, converts dates/numbers/percentages, upserts in batches, reconciles row counts, and stores every original row in `raw_payload`.
+
 ## Data model
 
 | Table | Purpose |

@@ -1,0 +1,22 @@
+name: Migrate Energy Dashboard to Supabase
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate and upsert Energy Dashboard rows
+        run: node scripts/migrate-energy-dashboard.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ENERGY_DASHBOARD_CSV_URL: ${{ secrets.ENERGY_DASHBOARD_CSV_URL }}
