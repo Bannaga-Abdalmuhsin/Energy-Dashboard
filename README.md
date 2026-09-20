@@ -1,27 +1,56 @@
-# COW Predictive Energy Dashboard
+# stc COW Energy Management Platform
 
-A simple dashboard for viewing COW site status, energy use, and operational trends in one place.
+A responsive operations website for **Energy Consumption & CO₂ Emissions Tracking and Fuel Management** across the national COW portfolio.
 
-## App idea
+## Included
 
-This app gives teams a clear daily view of how sites are performing. It combines status counts, energy metrics, maps, and trends so users can quickly spot where attention is needed.
+- Secure login with Supabase Auth support and a preview fallback before configuration
+- National command-center overview with energy, diesel, emissions, coverage and alerts
+- Dedicated Energy Analytics, CO₂ Emissions, Fuel Management, Sites & Map, Reports and Settings routes
+- Responsive desktop/mobile application shell with protected routes
+- Supabase REST adapter, environment template, relational schema and row-level security starter policies
+- Existing Google Sheet analytics functions retained for migration/reference
 
-## Layout
+## Run locally
 
-- **Top header** — app title and navigation
-- **Main dashboard** (`#/`) — summary cards, status ticker, filters, regional breakdown, and KPI gauges
-- **Heat map** (`#/heatmap`) — geographic view of site activity
-- **Energy trends** (`#/trends`) — charts for fuel, power, CO₂, and generator load
-- **Reports** (`#/reports`) — space for management reports and exports
+```bash
+pnpm install
+pnpm dev
+```
 
-## How it works
+Until Supabase is configured, the login is in preview mode and accepts any valid email/password combination.
 
-1. Open the dashboard to see the latest overall status.
-2. Use the filters to narrow results by region, district, city, or site.
-3. Review the KPI cards and gauges to understand fuel, power, and emissions.
-4. Switch to the heat map to see where sites are concentrated.
-5. Open the trends page to compare performance over time.
+## Connect Supabase
 
-## Who it is for
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL Editor.
+3. Copy `.env.example` to `.env.local` and set:
 
-Operations, energy, and management teams who need a quick and practical view of network performance.
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+4. Create users in Supabase Authentication and optionally add `full_name` and `role` to user metadata.
+5. Import site, energy, emissions, fuel and alerts data into the matching tables.
+
+Never commit the Supabase service-role key. The browser application needs only the public anon key; RLS controls access.
+
+## Data model
+
+| Table | Purpose |
+|---|---|
+| `sites` | COW master data, location, source and capacities |
+| `energy_readings` | Timestamped power and energy measurements |
+| `fuel_transactions` | Deliveries, consumption, levels and supplier details |
+| `emission_readings` | Scope 1/2 and avoided emissions |
+| `alerts` | Operational energy and fuel alerts |
+| `profiles` | User role and region access metadata |
+
+## Validation
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm build
+```
