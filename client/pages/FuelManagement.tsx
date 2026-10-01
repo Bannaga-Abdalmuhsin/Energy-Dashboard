@@ -4,23 +4,23 @@ import { AlertTriangle, CalendarClock, Fuel, RefreshCw } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { fetchFuelPlan, FuelRegion, inFuelRegion } from "@/lib/fuel-plan";
 
-const regions: FuelRegion[] = ["CER", "West", "South", "North"];
+const regions: FuelRegion[] = ["Central", "East", "West", "South"];
 const dateText = (date?: Date) => date ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(date) : "—";
 
 export default function FuelManagement() {
-  const [region, setRegion] = useState<FuelRegion>("CER");
+  const [region, setRegion] = useState<FuelRegion>("Central");
   const query = useQuery({ queryKey: ["fuel-plan"], queryFn: fetchFuelPlan, refetchInterval: 600000 });
   const sites = useMemo(() => (query.data?.sites || []).filter(site => inFuelRegion(site, region)).sort((a, b) => a.daysUntil - b.daysUntil), [query.data, region]);
   const overdue = sites.filter(site => site.timing === "overdue").length;
   const today = sites.filter(site => site.timing === "today").length;
   const upcoming = sites.filter(site => site.daysUntil > 0 && site.daysUntil <= 15).length;
 
-  return <Layout title="Fuel Management" description="Live fueling schedule from the CER fuel plan">
+  return <Layout title="Fuel Management" description="Live regional fueling schedule">
     <section className="fuel-toolbar">
       <div className="fuel-regions" aria-label="Fuel plan region">{regions.map(item => <button className={region === item ? "active" : ""} onClick={() => setRegion(item)} key={item}>{item}</button>)}</div>
-      <div className="fuel-source"><span className="live-dot"/> {query.data?.source || "Loading source"}<button aria-label="Refresh fuel data" onClick={() => query.refetch()}><RefreshCw size={15}/></button></div>
+      <div className="fuel-source"><span className="live-dot"/> Live data<button aria-label="Refresh fuel data" onClick={() => query.refetch()}><RefreshCw size={15}/></button></div>
     </section>
-    {query.isError ? <div className="fuel-error"><AlertTriangle size={18}/> Fuel data could not be loaded. Check the sheet sharing settings and try again.</div> : <>
+    {query.isError ? <div className="fuel-error"><AlertTriangle size={18}/> Fuel data could not be loaded. Check the data access settings and try again.</div> : <>
       <section className="fuel-kpis">
         <article><Fuel/><div><strong>{query.isLoading ? "—" : sites.length}</strong><span>Fueling sites</span></div></article>
         <article className="danger"><AlertTriangle/><div><strong>{query.isLoading ? "—" : overdue}</strong><span>Overdue</span></div></article>

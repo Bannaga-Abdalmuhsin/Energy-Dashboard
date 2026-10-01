@@ -3,23 +3,12 @@ import { isSupabaseConfigured, selectRows } from "@/lib/supabase";
 export const CER_FUEL_CSV = "https://docs.google.com/spreadsheets/d/1uWbVwsJ6mgUl9WxJz-zbxMaiCW-dG3DI_9gvKkEca18/export?format=csv&gid=1149576218";
 
 export type FuelTiming = "overdue" | "today" | "coming3" | "planned";
-export type FuelRegion = "CER" | "West" | "South" | "North";
+export type FuelRegion = "Central" | "East" | "West" | "South";
 
 export type FuelSite = {
-  site: string;
-  region: string;
-  status: string;
-  district: string;
-  city: string;
-  label: string;
-  latitude: number;
-  longitude: number;
-  nextFuelingPlan: Date;
-  lastFuelingDate?: Date;
-  lastFuelingQuantity?: number;
-  fuelLevel?: number;
-  daysUntil: number;
-  timing: FuelTiming;
+  site: string; region: string; status: string; district: string; city: string; label: string;
+  latitude: number; longitude: number; nextFuelingPlan: Date; lastFuelingDate?: Date;
+  lastFuelingQuantity?: number; fuelLevel?: number; daysUntil: number; timing: FuelTiming;
 };
 
 function parseCsv(text: string): Record<string, string>[] {
@@ -48,15 +37,11 @@ const valueFrom = (row: Record<string, unknown>, ...keys: string[]) => {
   }
   return "";
 };
-const numeric = (value: string) => {
-  const number = Number(value.replace(/[% ,]/g, ""));
-  return Number.isFinite(number) ? number : undefined;
-};
+const numeric = (value: string) => { const number = Number(value.replace(/[% ,]/g, "")); return Number.isFinite(number) ? number : undefined; };
 const parseDate = (value: string) => {
   const text = value.trim();
   if (!text || text.startsWith("#") || /^(sec site|west|south)$/i.test(text)) return undefined;
-  const date = new Date(text);
-  return Number.isNaN(date.getTime()) ? undefined : date;
+  const date = new Date(text); return Number.isNaN(date.getTime()) ? undefined : date;
 };
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const daysFromToday = (date: Date) => Math.round((startOfDay(date).getTime() - startOfDay(new Date()).getTime()) / 86400000);
@@ -82,7 +67,9 @@ function normalizeSite(row: Record<string, unknown>): FuelSite | null {
 
 export function inFuelRegion(site: FuelSite, region: FuelRegion) {
   const value = site.region.trim().toUpperCase();
-  const aliases: Record<FuelRegion, string[]> = { CER: ["CER", "CENTRAL", "EAST", "CR", "ER"], West: ["WEST", "WR"], South: ["SOUTH", "SR"], North: ["NORTH", "NR"] };
+  const aliases: Record<FuelRegion, string[]> = {
+    Central: ["CENTRAL", "CR"], East: ["EAST", "EASTERN", "ER"], West: ["WEST", "WR"], South: ["SOUTH", "SR"]
+  };
   return aliases[region].includes(value);
 }
 
@@ -95,7 +82,7 @@ export async function fetchFuelPlan(): Promise<{ sites: FuelSite[]; source: "Sup
     } catch { /* Use the authoritative fuel sheet until Supabase is populated. */ }
   }
   const response = await fetch(CER_FUEL_CSV);
-  if (!response.ok) throw new Error("Unable to load the CER fuel plan.");
+  if (!response.ok) throw new Error("Unable to load the fuel plan.");
   const sites = parseCsv(await response.text()).map(normalizeSite).filter((site): site is FuelSite => Boolean(site));
   return { sites, source: "Google Sheet" };
 }
