@@ -15,7 +15,7 @@ export default function FuelManagement() {
   const today = sites.filter(site => site.timing === "today").length;
   const upcoming = sites.filter(site => site.daysUntil > 0 && site.daysUntil <= 15).length;
 
-  return <Layout title="Fuel Management" description="Live regional fueling schedule">
+  return <Layout title="Fuel Management" description="Regional fueling schedule">
     <section className="fuel-toolbar">
       <div className="fuel-regions" aria-label="Fuel plan region">{regions.map(item => <button className={region === item ? "active" : ""} onClick={() => setRegion(item)} key={item}>{item}</button>)}</div>
       <div className="fuel-source"><button aria-label="Refresh fuel data" onClick={() => query.refetch()}><RefreshCw size={15}/></button></div>
