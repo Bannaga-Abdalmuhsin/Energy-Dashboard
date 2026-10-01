@@ -18,7 +18,7 @@ export default function FuelManagement() {
   return <Layout title="Fuel Management" description="Live regional fueling schedule">
     <section className="fuel-toolbar">
       <div className="fuel-regions" aria-label="Fuel plan region">{regions.map(item => <button className={region === item ? "active" : ""} onClick={() => setRegion(item)} key={item}>{item}</button>)}</div>
-      <div className="fuel-source"><span className="live-dot"/> Live data<button aria-label="Refresh fuel data" onClick={() => query.refetch()}><RefreshCw size={15}/></button></div>
+      <div className="fuel-source"><button aria-label="Refresh fuel data" onClick={() => query.refetch()}><RefreshCw size={15}/></button></div>
     </section>
     {query.isError ? <div className="fuel-error"><AlertTriangle size={18}/> Fuel data could not be loaded. Check the data access settings and try again.</div> : <>
       <section className="fuel-kpis">
